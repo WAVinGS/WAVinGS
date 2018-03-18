@@ -10,14 +10,21 @@ def ini_background(matrix, width, height, block_size, offset):
                 screen.blit(water, (i*block_size-offset, j*block_size))
             elif matrix[i][j] == 1:
                 screen.blit(ice, (i*block_size-offset, j*block_size))
+            elif matrix[i][j] == 2:
+                screen.blit(rock, (i*block_size-offset, j*block_size))
 
-def possibility(num):
-    if num == 0:
-        return False
-    if num <= np.random.rand() * 100:
-        return True
+def possibility():
+    # set level
+    # 80% ice
+    # 10% water
+    # 10% rock
+    p = np.random.rand() * 100
+    if 0 <= p < 80:
+        return 0
+    elif 80 <= p < 90:
+        return 1
     else:
-        return False
+        return 2
 
 def map_update(matrix, offset, block_size):
     if offset == block_size:
@@ -25,10 +32,7 @@ def map_update(matrix, offset, block_size):
         # lst is a random last column
         lst = []
         for i in range(len(matrix[0])):
-            if possibility(10):
-                lst.append(0)
-            else:
-                lst.append(1)
+            lst.append(possibility())
         matrix.append(lst)
         matrix.pop(0)
         print(matrix)
@@ -44,8 +48,9 @@ width, height = block_size * w, block_size * h
 screen = pygame.display.set_mode((width, height))
 
 player = pygame.image.load("img/pixel-80x80.png")
-water = pygame.image.load("img/water.png")
 ice = pygame.image.load("img/ice.png")
+water = pygame.image.load("img/water.png")
+rock = pygame.image.load("img/pixel-80x80.png")
 
 keys = [False, False, False, False]
 width_mid = int(width/2 - block_size/2)
@@ -95,7 +100,10 @@ while True:
 
     # move left
     if keys[0]:
-        player_pos[0] -= speed
+        if player_pos[0] <= 0:
+            player_pos[0] = 0
+        else:
+            player_pos[0] -= speed
     # move right
     elif keys[1]:
         if player_pos[0] < width_mid:
@@ -106,7 +114,15 @@ while True:
             offset += speed
     # move down
     if keys[2]:
-        player_pos[1] += speed
+        if player_pos[1] >= height - block_size:
+            player_pos[1] = height - block_size
+        else:
+            player_pos[1] += speed
     # move up
     elif keys[3]:
-        player_pos[1] -= speed
+        if player_pos[1] <= 0:
+            player_pos[1] = 0
+            print(player_pos[1])
+        else:
+            player_pos[1] -= speed
+            print(player_pos[1])
