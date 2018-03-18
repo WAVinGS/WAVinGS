@@ -112,6 +112,10 @@ pygame.font.init()
 myfont = pygame.font.SysFont('Comic Sans MS', 30)
 
 pygame.init()
+pygame.mixer.init()
+pygame.mixer.music.load('music.mp3')
+pygame.mixer.music.set_volume(0.28)
+pygame.mixer.music.play()
 
 # img size
 block_size = 80
