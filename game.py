@@ -5,12 +5,11 @@ from pygame.locals import *
 import numpy as np
 
 # choose where to get started to degrade
-def add_new(lst_degrade, w_, h_):
+def add_new(lst_degrade, w_, h_, times):
     """
     add random location into lst_degrade
     lst_degrade is used to check where ice has to degrade til becoming water
     """
-    times = 1
     for i in range(times):
         w = np.random.randint(0, w_)
         h = np.random.randint(0, h_)
@@ -81,7 +80,7 @@ def remove_neg(lst_degrade, tmp):
     else:
         remove_neg(lst_degrade, tmp+1)
 
-def map_update(matrix, offset, block_size, lst_degrade):
+def map_update(matrix, offset, block_size, lst_degrade, Score):
     """
     update new map(matrix)
     only when offset is same with block size, update map
@@ -101,10 +100,16 @@ def map_update(matrix, offset, block_size, lst_degrade):
             for i in range(len(lst_degrade)):
                 lst_degrade[i] = (lst_degrade[i][0]-1, lst_degrade[i][1])
 
+        # update score
+        Score[0] += 1
+
         return 0
     return offset
 
 
+# text init
+pygame.font.init()
+myfont = pygame.font.SysFont('Comic Sans MS', 30)
 
 pygame.init()
 
@@ -115,7 +120,7 @@ width, height = block_size * w, block_size * h
 screen = pygame.display.set_mode((width, height))
 
 # load img
-player = pygame.image.load("img/pixel-80x80.png")
+player = pygame.image.load("img/ball.png")
 ice = pygame.image.load("img/ice.png")
 water = pygame.image.load("img/water.png")
 rock = pygame.image.load("img/pixel-80x80.png")
@@ -134,13 +139,24 @@ offset = 0
 
 tmp = time.time()
 lst_degrade = []
-second = 2
+second = 1.5
+times = 1
+right_ind = (w-2)*block_size - 30
+Score = [0]
+
 
 while True:
+    if 100 <= Score[0] < 200:
+        Second -= 1.2
+        times = 2
+    elif 200 <= Score[0] < 300:
+        Second -= 1.0
+        times = 3
+
     # every 2 second make a degradation
     if time.time() - tmp > second:
         tmp = time.time()
-        add_new(lst_degrade, w, h)
+        add_new(lst_degrade, w, h, times)
         degrade(matrix, lst_degrade)
 
     # check if GG
@@ -150,10 +166,14 @@ while True:
     screen.fill(0)
 
     # update matrix(map)
-    offset = map_update(matrix, offset, block_size, lst_degrade)
+    offset = map_update(matrix, offset, block_size, lst_degrade, Score)
 
     # print background
     ini_background(matrix, w, h, block_size, offset)
+
+    # text
+    textsurface = myfont.render('Score: ' + str(Score[0]), False, (0, 0, 0))
+    screen.blit(textsurface,(right_ind, 0))
 
     screen.blit(player, player_pos)
     pygame.display.flip()
