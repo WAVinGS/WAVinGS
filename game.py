@@ -150,12 +150,15 @@ Score = [0]
 
 
 while True:
-    if 100 <= Score[0] < 200:
-        Second -= 1.2
+    if 50 <= Score[0] < 100:
+        second = 1.2
         times = 2
-    elif 200 <= Score[0] < 300:
-        Second -= 1.0
+    elif 100 <= Score[0] < 150:
+        second = 1.0
         times = 3
+    elif 200 <= Score[0] < 250:
+        second = 0.8
+        times = 4
 
     # every 2 second make a degradation
     if time.time() - tmp > second:
