@@ -4,14 +4,36 @@ import pygame
 from pygame.locals import *
 import numpy as np
 
+# choose where to get started to degrade
+def add_new(lst_degrade, w_, h_):
+    """
+    add random location into lst_degrade
+    lst_degrade is used to check where ice has to degrade til becoming water
+    """
+    times = 1
+    for i in range(times):
+        w = np.random.randint(0, w_)
+        h = np.random.randint(0, h_)
+        if not (w, h) in lst_degrade:
+            lst_degrade.append((w, h))
+
+# used to change ice level
+def degrade(matrix, lst_degrade):
+    """
+    degrade where ice has to degrade
+    """
+    for t in lst_degrade:
+        matrix[t[0]][t[1]] = ice_degrade(matrix[t[0]][t[1]])
+
 def ice_degrade(n):
     if n == 0: # 0 : complete
         return 3 # 3 : half-complete
-    elif n == 3: 
+    elif n == 3:
         return 1 # 1 : water
     # rock and water
     return n
 
+# check if GG
 def Is_GG(player_pos, block_size, matrix):
     w = round(player_pos[0] / block_size)
     h = round(player_pos[1] / block_size)
@@ -66,7 +88,7 @@ def map_update(matrix, offset, block_size, lst_degrade):
         # move degrading ice to left
         if any(lst_degrade):
             for i in range(len(lst_degrade)):
-                if lst_degrade[i] == 0:
+                if lst_degrade[i][0] <= 0:
                     lst_degrade.pop(i)
                 else:
                     lst_degrade[i] = (lst_degrade[i][0]-1, lst_degrade[i][1])
@@ -101,27 +123,15 @@ matrix = [[0 for i in range(h)] for j in range(w+1)]
 matrix[4][3] = matrix[3][3] = matrix[4][2] = matrix[3][2] = 2
 offset = 0
 
-# choose where to get started to degrade
-def add_new(lst_degrade):
-    times = 1
-    for i in range(times):
-        w = np.random.randint(0, 9) # !!!!!
-        h = np.random.randint(0, 6) # !!!!!
-        lst_degrade.append((w, h))
-
-# used to change ice level
-def degrade(matrix, lst_degrade):
-    for t in lst_degrade:
-        matrix[t[0]][t[1]] = ice_degrade(matrix[t[0]][t[1]])
-
 
 tmp = time.time()
 lst_degrade = []
+
 while True:
     # every 2 second make a degradation
     if time.time() - tmp > 5:
         tmp = time.time()
-        add_new(lst_degrade)
+        add_new(lst_degrade, w, h)
         degrade(matrix, lst_degrade)
 
     # check if GG
