@@ -1,17 +1,40 @@
+import threading
 import time
 import pygame
 from pygame.locals import *
 import numpy as np
 
+def ice_degrade(n):
+    if n == 0: # 0 : complete
+        return 3 # 3 : half-complete
+    elif n == 3: 
+        return 1 # 1 : water
+    # rock and water
+    return n
+
+def Is_GG(player_pos, block_size, matrix):
+    w = round(player_pos[0] / block_size)
+    h = round(player_pos[1] / block_size)
+    if matrix[w][h] == 1:
+        return True
+    else:
+        return False
+
 def ini_background(matrix, width, height, block_size, offset):
+    """
+    draw background
+    offset: used to move background
+    """
     for i in range(len(matrix)):
         for j in range(len(matrix[0])):
             if matrix[i][j] == 0:
-                screen.blit(water, (i*block_size-offset, j*block_size))
-            elif matrix[i][j] == 1:
                 screen.blit(ice, (i*block_size-offset, j*block_size))
+            elif matrix[i][j] == 1:
+                screen.blit(water, (i*block_size-offset, j*block_size))
             elif matrix[i][j] == 2:
                 screen.blit(rock, (i*block_size-offset, j*block_size))
+            elif matrix[i][j] == 3:
+                screen.blit(usumizu, (i*block_size-offset, j*block_size))
 
 def possibility():
     # set level
@@ -26,7 +49,11 @@ def possibility():
     else:
         return 2
 
-def map_update(matrix, offset, block_size):
+def map_update(matrix, offset, block_size, lst_degrade):
+    """
+    update new map(matrix)
+    only when offset is same with block size, update map
+    """
     if offset == block_size:
         # update matrix
         # lst is a random last column
@@ -35,9 +62,19 @@ def map_update(matrix, offset, block_size):
             lst.append(possibility())
         matrix.append(lst)
         matrix.pop(0)
-        print(matrix)
+
+        # move degrading ice to left
+        if any(lst_degrade):
+            for i in range(len(lst_degrade)):
+                if lst_degrade[i] == 0:
+                    lst_degrade.pop(i)
+                else:
+                    lst_degrade[i] = (lst_degrade[i][0]-1, lst_degrade[i][1])
+
         return 0
     return offset
+
+
 
 pygame.init()
 
@@ -47,10 +84,13 @@ w, h = 8, 6
 width, height = block_size * w, block_size * h
 screen = pygame.display.set_mode((width, height))
 
+# load img
 player = pygame.image.load("img/pixel-80x80.png")
 ice = pygame.image.load("img/ice.png")
 water = pygame.image.load("img/water.png")
 rock = pygame.image.load("img/pixel-80x80.png")
+usumizu = pygame.image.load("img/usumizu.png")
+
 
 keys = [False, False, False, False]
 width_mid = int(width/2 - block_size/2)
@@ -58,14 +98,40 @@ height_mid = int(height/2 - block_size/2)
 player_pos = [width_mid, height_mid]
 speed = 5
 matrix = [[0 for i in range(h)] for j in range(w+1)]
-matrix[3][2] = 1
+matrix[4][3] = matrix[3][3] = matrix[4][2] = matrix[3][2] = 2
 offset = 0
 
+# choose where to get started to degrade
+def add_new(lst_degrade):
+    times = 1
+    for i in range(times):
+        w = np.random.randint(0, 9) # !!!!!
+        h = np.random.randint(0, 6) # !!!!!
+        lst_degrade.append((w, h))
+
+# used to change ice level
+def degrade(matrix, lst_degrade):
+    for t in lst_degrade:
+        matrix[t[0]][t[1]] = ice_degrade(matrix[t[0]][t[1]])
+
+
+tmp = time.time()
+lst_degrade = []
 while True:
+    # every 2 second make a degradation
+    if time.time() - tmp > 5:
+        tmp = time.time()
+        add_new(lst_degrade)
+        degrade(matrix, lst_degrade)
+
+    # check if GG
+    if Is_GG(player_pos, block_size, matrix):
+        exit(55)
+
     screen.fill(0)
 
     # update matrix(map)
-    offset = map_update(matrix, offset, block_size)
+    offset = map_update(matrix, offset, block_size, lst_degrade)
 
     # print background
     ini_background(matrix, w, h, block_size, offset)
@@ -122,7 +188,5 @@ while True:
     elif keys[3]:
         if player_pos[1] <= 0:
             player_pos[1] = 0
-            print(player_pos[1])
         else:
             player_pos[1] -= speed
-            print(player_pos[1])
