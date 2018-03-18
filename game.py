@@ -71,6 +71,16 @@ def possibility():
     else:
         return 2
 
+# remove negative one
+def remove_neg(lst_degrade, tmp):
+    if len(lst_degrade) == tmp:
+        return
+    if lst_degrade[tmp][0] <= 0:
+        lst_degrade.pop(tmp)
+        remove_neg(lst_degrade, tmp)
+    else:
+        remove_neg(lst_degrade, tmp+1)
+
 def map_update(matrix, offset, block_size, lst_degrade):
     """
     update new map(matrix)
@@ -87,11 +97,9 @@ def map_update(matrix, offset, block_size, lst_degrade):
 
         # move degrading ice to left
         if any(lst_degrade):
+            remove_neg(lst_degrade, 0)
             for i in range(len(lst_degrade)):
-                if lst_degrade[i][0] <= 0:
-                    lst_degrade.pop(i)
-                else:
-                    lst_degrade[i] = (lst_degrade[i][0]-1, lst_degrade[i][1])
+                lst_degrade[i] = (lst_degrade[i][0]-1, lst_degrade[i][1])
 
         return 0
     return offset
@@ -126,10 +134,11 @@ offset = 0
 
 tmp = time.time()
 lst_degrade = []
+second = 2
 
 while True:
     # every 2 second make a degradation
-    if time.time() - tmp > 5:
+    if time.time() - tmp > second:
         tmp = time.time()
         add_new(lst_degrade, w, h)
         degrade(matrix, lst_degrade)
